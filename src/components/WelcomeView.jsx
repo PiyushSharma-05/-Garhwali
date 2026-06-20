@@ -24,7 +24,7 @@ const WelcomeView = ({ subGreeting, currentUser }) => {
           <>
             Let's jump in,{' '}
             <span className="bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent">
-              {currentUser.name}!
+              {(currentUser?.name || "User").split(" ")[0]}!
             </span>
           </>
         )}

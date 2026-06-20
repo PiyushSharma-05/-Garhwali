@@ -32,22 +32,123 @@ const MainPanel = ({ messages = [], setMessages, currentUser, isSidebarOpen, set
     }
   }, [safeMessages.length]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
+
     if (inputText.trim() === '') return;
 
-    const userMessage = { id: Date.now(), sender: 'user', text: inputText };
-    const updatedMessages = [...safeMessages, userMessage];
+    const question = inputText;
+
+    const userMessage = {
+      id: Date.now(),
+      sender: 'user',
+      text: question
+    };
+
+    const updatedMessages = [
+      ...safeMessages,
+      userMessage
+    ];
+
     setMessages(updatedMessages);
+
     setInputText('');
+
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+
+      const { loadDataset } =
+        await import('../ai/datasetLoader');
+
+      const { retrieve } =
+        await import('../ai/retrieve');
+
+      const data =
+        await loadDataset();
+
+      const rows =
+        retrieve(
+          data,
+          question
+        );
+
+      let reply;
+
+      if (
+        rows.length
+      ) {
+
+        const {
+          generateAnswer
+        }
+          =
+          await import(
+            '../ai/generate'
+          );
+
+        reply =
+          await generateAnswer(
+            question,
+            rows
+          );
+
+      }
+
+      else {
+
+        reply =
+          "Translation unavailable.";
+
+      }
+
       setMessages([
+
         ...updatedMessages,
-        { id: Date.now() + 1, sender: 'bot', text: `This is a processed foundational response tracking prompt payload details: "${userMessage.text}"` }
+
+        {
+
+          id:
+            Date.now() + 1,
+
+          sender:
+            'bot',
+
+          text:
+            reply
+
+        }
+
       ]);
-      setIsLoading(false);
-    }, 1200);
+
+    }
+
+    catch (err) {
+
+      console.log(err);
+
+      setMessages([
+
+        ...updatedMessages,
+
+        {
+
+          id:
+            Date.now() + 1,
+
+          sender:
+            'bot',
+
+          text:
+            "Dataset load failed."
+
+        }
+
+      ]);
+
+    }
+
+    setIsLoading(false);
+
   };
 
   const handleKeyDown = (e) => {
@@ -59,7 +160,7 @@ const MainPanel = ({ messages = [], setMessages, currentUser, isSidebarOpen, set
 
   return (
     <motion.div layout className="w-full flex-1 h-full flex flex-col relative bg-transparent overflow-hidden">
-      
+
       {/* Header Panel */}
       <div className="w-full bg-[#150e26]/20 backdrop-blur-md border-b border-purple-950/10 h-16 flex items-center justify-between px-8 z-20 relative shadow-md">
         <div className="flex items-center gap-4">
@@ -102,8 +203,8 @@ const MainPanel = ({ messages = [], setMessages, currentUser, isSidebarOpen, set
       <div className="w-full flex-1 overflow-hidden relative z-10 flex flex-col justify-center items-center">
         <AnimatePresence mode="wait">
           {safeMessages.length === 0 ? (
-            <motion.div 
-              key="welcome" 
+            <motion.div
+              key="welcome"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
