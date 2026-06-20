@@ -4,6 +4,7 @@ import MainPanel from './components/MainPanel';
 import AboutUsView from './components/AboutUsView';
 import AuthView from './components/AuthView';
 import { AnimatePresence } from 'framer-motion';
+import { syncUser } from "./backend/syncUser";
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -28,11 +29,28 @@ function App() {
     setMessages([]);
   };
 
-  const handleSignInSuccess = (user) => {
-    setCurrentUser(user);
-    localStorage.setItem('garhwali_active_session', JSON.stringify(user));
-    setShowAuthModal(false);
-  };
+  const handleSignInSuccess =
+    async (user) => {
+      console.log(user)
+
+      await syncUser(
+        user
+      );
+
+      setCurrentUser(
+        user
+      );
+
+      localStorage.setItem(
+        'garhwali_active_session',
+        JSON.stringify(user)
+      );
+
+      setShowAuthModal(
+        false
+      );
+
+    };
 
   const handleSignOut = () => {
     setCurrentUser(null);
